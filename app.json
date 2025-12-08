@@ -8,9 +8,17 @@
     "scheme": "pantriai",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.jeff.pantriai",
+
+      "infoPlist": {
+        "NSCameraUsageDescription": "PantriAI uses the camera to scan items and manage inventory.",
+        "NSMicrophoneUsageDescription": "PantriAI may use the microphone when recording or scanning video content."
+      }
     },
+
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
@@ -19,12 +27,15 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.jeff.pantriai"
     },
+
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
+
     "plugins": [
       "expo-router",
       [
@@ -38,8 +49,16 @@
             "backgroundColor": "#000000"
           }
         }
+      ],
+      [
+        "react-native-vision-camera",
+        {
+          "cameraPermissionText": "PantriAI uses the camera to scan items and manage inventory.",
+          "microphonePermissionText": "PantriAI may use the microphone when recording or scanning video content."
+        }
       ]
     ],
+
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true

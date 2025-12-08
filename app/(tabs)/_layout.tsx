@@ -15,19 +15,27 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
         tabBarButton: HapticTab,
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={28} name="house.fill" color={color} />
+          ),
         }}
       />
+
       <Tabs.Screen
-        name="explore"
+        name="scan"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Scan',
+          // pick any SF Symbol your IconSymbol supports; examples:
+          // 'barcode.viewfinder', 'camera.viewfinder', or 'qrcode.viewfinder'
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={28} name="barcode.viewfinder" color={color} />
+          ),
         }}
       />
     </Tabs>
