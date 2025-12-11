@@ -1,3 +1,4 @@
+// app/add-item/ExpirationScanner/ExpirationScanner.tsx
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -9,73 +10,7 @@ import {
 } from 'react-native';
 import MlkitOcr from 'react-native-mlkit-ocr';
 import { Camera, useCameraDevice } from 'react-native-vision-camera';
-import { extractDates } from '../../../utils/dateUtils';
-
-// --- extra helper JUST for things like "BEST BY DCT 14 2028" -----
-
-const MONTHS: Record<string, string> = {
-  JAN: '01',
-  FEB: '02',
-  MAR: '03',
-  APR: '04',
-  MAY: '05',
-  JUN: '06',
-  JUL: '07',
-  AUG: '08',
-  SEP: '09',
-  SEPT: '09',
-  OCT: '10',
-  NOV: '11',
-  DEC: '12',
-};
-
-function fuzzyMonth(token: string): string | null {
-  const clean = token.toUpperCase().replace(/[^A-Z]/g, '');
-  if (MONTHS[clean]) return MONTHS[clean];
-
-  if (clean.length !== 3) return null;
-
-  let bestKey: string | null = null;
-  let bestDiff = 10;
-
-  for (const key of Object.keys(MONTHS)) {
-    if (key.length !== 3) continue;
-    let diff = 0;
-    for (let i = 0; i < 3; i++) {
-      if (clean[i] !== key[i]) diff++;
-    }
-    if (diff < bestDiff) {
-      bestDiff = diff;
-      bestKey = key;
-    }
-  }
-
-  if (bestKey && bestDiff <= 1) {
-    // allow one-letter typo, e.g. DCT -> OCT
-    return MONTHS[bestKey];
-  }
-  return null;
-}
-
-function bestByFallbackDate(text: string): string[] {
-  const upper = text.toUpperCase();
-
-  // Example it will match: "BEST BY DCT 14 2028"
-  const m = upper.match(/BEST\s+BY\s+([A-Z]{2,4})\s+(\d{1,2})\s+(\d{4})/);
-  if (!m) return [];
-
-  const [, monthToken, dayToken, yearToken] = m;
-  const month = fuzzyMonth(monthToken);
-  const day = dayToken.replace(/\D/g, '');
-  const year = yearToken.replace(/\D/g, '');
-
-  if (!month || !day || day.length === 0 || year.length !== 4) return [];
-
-  const iso = `${year}-${month}-${day.padStart(2, '0')}`;
-  return [iso];
-}
-
-// -----------------------------------------------------------------
+import { extractDates } from '../../utils/dateUtils';
 
 type Props = {
   /** Called when one or more normalized dates (YYYY-MM-DD) are extracted */
@@ -120,7 +55,7 @@ export default function ExpirationScanner({
       });
 
       // Get usable file path / URI
-      let rawPath: string | undefined =
+      const rawPath: string | undefined =
         (photo as any).path ||
         (photo as any).uri ||
         (photo as any).filePath ||
@@ -136,7 +71,7 @@ export default function ExpirationScanner({
       // Run ML Kit OCR
       const ocrBlocks = await MlkitOcr.detectFromUri(uri);
 
-      // Flatten text
+      // Flatten text into one big string
       const pieces: string[] = [];
       (ocrBlocks || []).forEach((b: any) => {
         if (b?.text) pieces.push(b.text);
@@ -147,25 +82,14 @@ export default function ExpirationScanner({
 
       const combined = pieces.join(' ');
 
-      // 1) original numeric matching (your working logic)
-      const rawMatches =
-        combined.match(
-          /\b(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4}|20\d{2}[\/\-.]\d{1,2}[\/\-.]\d{1,2})\b/g,
-        ) || [];
-
-      let normalized = extractDates(rawMatches);
-
-      // 2) extra fallback for "BEST BY DCT 14 2028" style
-      if (normalized.length === 0) {
-        const fallback = bestByFallbackDate(combined);
-        if (fallback.length > 0) {
-          normalized = fallback;
-        }
-      }
+      // ✅ Single universal extractor
+      const normalized = extractDates(combined);
 
       if (normalized.length === 0) {
-        // keep debug: shows what OCR saw when no date parsed
-        Alert.alert('No date found', combined.slice(0, 300) || '(no OCR text)');
+        Alert.alert(
+          'No date found',
+          combined.slice(0, 300) || '(no OCR text)',
+        );
       }
 
       setDates(normalized);
