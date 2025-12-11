@@ -1,30 +1,77 @@
+// app/expiration.tsx
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { View, Text, Button } from 'react-native';
-import ExpirationScanner from '../../../components/AddItem/ExpirationScanner/ExpirationScanner';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { Button, StyleSheet, Text, View } from 'react-native';
+
+import ExpirationScanner from '@/app/add-item/ExpirationScanner/ExpirationScanner';
 
 export default function ExpirationScreen() {
-  const nav = useNavigation();
-  const route = useRoute<any>();
-  const { barcode } = route.params ?? {};
+  const router = useRouter();
+  const params = useLocalSearchParams<{ barcode?: string }>();
+  const { barcode } = params;
   const [selected, setSelected] = useState<string | null>(null);
 
   return (
-    <View style={{ flex: 1 }}>
-      <Text style={{ position: 'absolute', top: 50, left: 20, zIndex: 2 }}>
+    <View style={styles.container}>
+      <Text style={styles.title}>
         Scan expiration date {barcode ? `for ${barcode}` : ''}
       </Text>
-      <ExpirationScanner /* inside, call setSelected on detection */ />
+
+      <View style={styles.scannerContainer}>
+        <ExpirationScanner
+          buttonLabel="Scan expiration date"
+          onDetected={(dates) => {
+            if (dates && dates.length > 0) {
+              // Take the first date for now
+              setSelected(dates[0]);
+            }
+          }}
+        />
+      </View>
+
       {selected && (
-        <View style={{ position: 'absolute', bottom: 40, left: 20, right: 20 }}>
-          <Text>Detected: {selected}</Text>
-          <Button title="Confirm & Save" onPress={() => {
-            // save { barcode, expiration: selected } to local DB
-            // then nav.goBack() or to success screen
-            nav.goBack();
-          }} />
+        <View style={styles.footer}>
+          <Text style={styles.detected}>Detected: {selected}</Text>
+          <Button
+            title="Confirm & Save"
+            onPress={() => {
+              // TODO: save { barcode, expiration: selected } to local DB
+              // For now, just go back
+              router.back();
+            }}
+          />
         </View>
       )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#000' },
+  title: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    zIndex: 2,
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  scannerContainer: {
+    flex: 1,
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 40,
+    left: 20,
+    right: 20,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    padding: 12,
+    borderRadius: 10,
+  },
+  detected: {
+    color: '#fff',
+    marginBottom: 8,
+    fontSize: 16,
+  },
+});
